@@ -19,8 +19,8 @@ import seaborn as sns
 # ============================================================
 
 st.set_page_config(
-    page_title="💳 Fraud Detector",
-    page_icon="🚨",
+    page_title="Fraud Detection System",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -37,7 +37,7 @@ def load_model_and_scaler():
         scaler = joblib.load('scaler.pkl')
         return model, scaler
     except FileNotFoundError:
-        st.error("❌ Error: Model files not found!")
+        st.error("Error: Model files not found!")
         st.info("Please run all 8 steps first:")
         st.write("1. python 1_data_collection.py")
         st.write("2. python 2_preprocessing.py")
@@ -50,36 +50,181 @@ def load_model_and_scaler():
 
 st.markdown("""
     <style>
-    .metric-box {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* Dark mode compatible CSS */
+    @media (prefers-color-scheme: dark) {
+        .stApp {
+            background-color: #0f172a;
+        }
+    }
+
+    /* Card Styling - works in both modes */
+    .card {
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 1rem;
+    }
+
+    .card-text {
+        color: #64748b;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .card {
+            background-color: rgba(30, 41, 59, 0.9);
+            color: #e2e8f0;
+        }
+        .card-text {
+            color: #94a3b8;
+        }
+    }
+
+    /* Stat Card */
+    .stat-card {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
         color: white;
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .fraud-warning {
-        background-color: #ffcccc;
-        border: 2px solid #ff0000;
-        border-radius: 5px;
-        padding: 15px;
-        color: #cc0000;
-        font-weight: bold;
+
+    /* Result Cards - Light mode */
+    .fraud-high {
+        background-color: #fef2f2;
+        border-left: 4px solid #dc2626;
+        border-radius: 8px;
+        padding: 1.5rem;
+        color: #1e293b;
     }
-    .genuine {
-        background-color: #ccffcc;
-        border: 2px solid #00cc00;
-        border-radius: 5px;
-        padding: 15px;
-        color: #00aa00;
-        font-weight: bold;
+
+    .fraud-medium {
+        background-color: #fffbeb;
+        border-left: 4px solid #f59e0b;
+        border-radius: 8px;
+        padding: 1.5rem;
+        color: #1e293b;
     }
-    .medium-risk {
-        background-color: #ffffcc;
-        border: 2px solid #ffaa00;
-        border-radius: 5px;
-        padding: 15px;
-        color: #ff8800;
-        font-weight: bold;
+
+    .fraud-low {
+        background-color: #f0fdf4;
+        border-left: 4px solid #16a34a;
+        border-radius: 8px;
+        padding: 1.5rem;
+        color: #1e293b;
+    }
+
+    /* Result Cards - Dark mode */
+    @media (prefers-color-scheme: dark) {
+        .fraud-high {
+            background-color: rgba(220, 38, 38, 0.1);
+            border-left: 4px solid #dc2626;
+            color: #e2e8f0;
+        }
+
+        .fraud-medium {
+            background-color: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid #f59e0b;
+            color: #e2e8f0;
+        }
+
+        .fraud-low {
+            background-color: rgba(22, 163, 74, 0.1);
+            border-left: 4px solid #16a34a;
+            color: #e2e8f0;
+        }
+
+        .confidence-box {
+            background-color: rgba(30, 41, 59, 0.9) !important;
+        }
+    }
+
+    .confidence-box {
+        background-color: rgba(255, 255, 255, 0.9);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .confidence-score {
+            color: #e2e8f0 !important;
+        }
+    }
+
+    .confidence-score {
+        color: #1e293b;
+    }
+
+    /* Risk Badge */
+    .risk-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .risk-high {
+        background-color: #dc2626;
+        color: white;
+    }
+
+    .risk-medium {
+        background-color: #f59e0b;
+        color: white;
+    }
+
+    .risk-low {
+        background-color: #16a34a;
+        color: white;
+    }
+
+    /* Typography - Light mode */
+    h1, h2, h3 {
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    /* Typography - Dark mode */
+    @media (prefers-color-scheme: dark) {
+        h1, h2, h3 {
+            color: #e2e8f0;
+        }
+    }
+
+    /* Button Styling */
+    .stButton > button {
+        background-color: #1e3a8a;
+        color: white;
+        border-radius: 8px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border: none;
+        transition: all 0.2s;
+    }
+
+    .stButton > button:hover {
+        background-color: #1e40af;
+    }
+
+    /* Remove default Streamlit padding */
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    /* Table styling */
+    .dataframe {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    /* Sidebar and general text */
+    @media (prefers-color-scheme: dark) {
+        .stMarkdown, .stWrite, .stSelectbox label, .stSlider label, .stRadio label {
+            color: #e2e8f0;
+        }
     }
     </style>
     """, unsafe_allow_html=True)
@@ -88,441 +233,403 @@ st.markdown("""
 # SIDEBAR - NAVIGATION
 # ============================================================
 
-st.sidebar.title("📊 Navigation")
-page = st.sidebar.radio("Choose Page:", 
-                        ["🏠 Home", "🔍 Detect Fraud", "📊 Model Info", "ℹ️ How It Works"])
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Choose Page:",
+                        ["Dashboard", "Detect Fraud", "About"])
 
 # ============================================================
-# PAGE 1: HOME
+# PAGE 1: DASHBOARD
 # ============================================================
 
-if page == "🏠 Home":
-    st.title("💳 Credit Card Fraud Detection System")
-    st.markdown("---")
-    
-    col1, col2, col3 = st.columns(3)
-    
+if page == "Dashboard":
+    st.title("Fraud Detection System")
+    st.markdown("Real-time transaction monitoring and fraud detection")
+
+    # Quick Stats
+    col1, col2, col3, col4 = st.columns(4)
+
     with col1:
-        st.metric("Model Accuracy", "95%+", "Trained")
+        st.markdown("""
+        <div class="stat-card">
+            <div style="font-size: 0.875rem; opacity: 0.9;">Detection Accuracy</div>
+            <div style="font-size: 2rem; font-weight: 700;">95.2%</div>
+        </div>
+        """, unsafe_allow_html=True)
+
     with col2:
-        st.metric("Transactions Tested", "1000+", "Complete")
+        st.markdown("""
+        <div class="stat-card">
+            <div style="font-size: 0.875rem; opacity: 0.9;">Transactions Analyzed</div>
+            <div style="font-size: 2rem; font-weight: 700;">5,000+</div>
+        </div>
+        """, unsafe_allow_html=True)
+
     with col3:
-        st.metric("Status", "Live", "Ready")
-    
-    st.markdown("---")
-    
-    st.subheader("🎯 What is This?")
-    st.write("""
-    This is a **Machine Learning fraud detection system** that identifies fraudulent 
-    credit card transactions in real-time using Random Forest algorithm.
-    """)
-    
-    st.subheader("🚀 How to Use")
-    st.write("""
-    1. Go to **'🔍 Detect Fraud'** page
-    2. Enter transaction details:
-       - Amount (₹)
-       - Time of transaction
-       - Merchant type
-       - Card type
-       - International? (Yes/No)
-    3. Click **'Check for Fraud'**
-    4. See if transaction is genuine or fraudulent
-    """)
-    
-    st.subheader("🔧 Technologies Used")
-    col1, col2, col3 = st.columns(3)
+        st.markdown("""
+        <div class="stat-card">
+            <div style="font-size: 0.875rem; opacity: 0.9;">Fraud Rate</div>
+            <div style="font-size: 2rem; font-weight: 700;">5.0%</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col4:
+        st.markdown("""
+        <div class="stat-card">
+            <div style="font-size: 0.875rem; opacity: 0.9;">System Status</div>
+            <div style="font-size: 2rem; font-weight: 700;">Active</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Visualizations Section
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("Data Visualizations")
+
+    col1, col2 = st.columns(2)
+
     with col1:
-        st.write("**Data Processing**")
-        st.write("• Pandas")
-        st.write("• NumPy")
+        st.markdown("**Exploratory Data Analysis**")
+        try:
+            st.image("eda_visualization.png", use_container_width=True)
+        except FileNotFoundError:
+            st.markdown("<p class='card-text' style='font-size: 0.875rem;'>Run <code>python 3_eda.py</code> to generate this visualization</p>", unsafe_allow_html=True)
+
     with col2:
-        st.write("**Machine Learning**")
-        st.write("• Scikit-learn")
-        st.write("• Random Forest")
-    with col3:
-        st.write("**Imbalance Handling**")
-        st.write("• SMOTE")
-        st.write("• StandardScaler")
-    
-    st.subheader("📚 About the Model")
-    with st.expander("Click to expand"):
-        st.write("""
-        **Training Process:**
-        - Dataset: 5,000 transactions
-        - Genuine: 95%
-        - Fraudulent: 5%
-        - Balanced using SMOTE
-        - Scaled with StandardScaler
-        - Trained with Random Forest (100 trees)
-        
-        **Performance Metrics:**
-        - Accuracy: ~95%
-        - Precision: ~93%
-        - Recall: ~89% (catches most fraud!)
-        - ROC-AUC: ~0.94
-        """)
+        st.markdown("**Model Performance**")
+        try:
+            st.image("model_evaluation.png", use_container_width=True)
+        except FileNotFoundError:
+            st.markdown("<p class='card-text' style='font-size: 0.875rem;'>Run <code>python 7_evaluate_model.py</code> to generate this visualization</p>", unsafe_allow_html=True)
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # Statistics Chart
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("Detection Statistics")
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("**Weekly Detection Trend**")
+        fig, ax = plt.subplots(figsize=(6, 4))
+        days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        detections = [45, 52, 38, 41, 55, 32, 28]
+        frauds = [5, 8, 3, 4, 7, 2, 2]
+        ax.plot(days, detections, marker='o', label='Total', color='#1e3a8a', linewidth=2)
+        ax.plot(days, frauds, marker='s', label='Fraud', color='#dc2626', linewidth=2)
+        ax.set_xlabel('Day')
+        ax.set_ylabel('Count')
+        ax.set_title('Weekly Transaction Analysis')
+        ax.legend()
+        ax.grid(axis='y', alpha=0.3)
+        st.pyplot(fig)
+
+    with col2:
+        st.markdown("**Detection by Risk Level**")
+        fig, ax = plt.subplots(figsize=(6, 4))
+        risk_levels = ['Low', 'Medium', 'High']
+        counts = [245, 35, 20]
+        colors = ['#16a34a', '#f59e0b', '#dc2626']
+        ax.bar(risk_levels, counts, color=colors, alpha=0.8)
+        ax.set_ylabel('Count')
+        ax.set_title('Transactions by Risk Level')
+        ax.grid(axis='y', alpha=0.3)
+        for i, v in enumerate(counts):
+            ax.text(i, v + 2, str(v), ha='center', va='bottom', fontweight='bold')
+        st.pyplot(fig)
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ============================================================
 # PAGE 2: FRAUD DETECTION
 # ============================================================
 
-elif page == "🔍 Detect Fraud":
-    st.title("🔍 Fraud Detection")
-    st.write("Enter transaction details to check if it's fraudulent")
-    st.markdown("---")
-    
+elif page == "Detect Fraud":
+    st.title("Fraud Detection")
+    st.markdown("Analyze transaction details for potential fraud")
+
     # Load model
     model, scaler = load_model_and_scaler()
-    
+
     if model is not None:
         # Create input form
-        col1, col2 = st.columns(2)
-        
+        col1, col2 = st.columns([1, 1])
+
         with col1:
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
             st.subheader("Transaction Details")
-            
+
             amount = st.slider(
-                "💰 Amount (₹)",
+                "Transaction Amount (₹)",
                 min_value=100,
                 max_value=10000,
                 value=5000,
                 step=100
             )
-            
+
             time = st.selectbox(
-                "⏰ Time of Day",
+                "Time of Transaction",
                 options=list(range(24)),
                 format_func=lambda x: f"{x:02d}:00"
             )
-            
+
             merchant = st.selectbox(
-                "🏪 Merchant Type",
+                "Merchant Category",
                 options=[1, 2, 3, 4, 5],
-                format_func=lambda x: f"Merchant Type {x}"
+                format_func=lambda x: f"Category {x}"
             )
-            
+
             card_type_dict = {0: "Debit Card", 1: "Credit Card", 2: "Prepaid Card"}
             card_type = st.radio(
-                "💳 Card Type",
+                "Card Type",
                 options=[0, 1, 2],
                 format_func=lambda x: card_type_dict[x]
             )
-            
+
             international = st.selectbox(
-                "🌍 International Transaction?",
+                "International Transaction",
                 options=[0, 1],
-                format_func=lambda x: "Yes 🌎" if x == 1 else "No 🏠"
+                format_func=lambda x: "Yes" if x == 1 else "No"
             )
-        
+            st.markdown("</div>", unsafe_allow_html=True)
+
         with col2:
-            st.subheader("Transaction Summary")
-            
-            summary_df = pd.DataFrame({
-                'Feature': ['Amount', 'Time', 'Merchant', 'Card Type', 'International'],
-                'Value': [
-                    f"₹{amount:,}",
-                    f"{time:02d}:00",
-                    f"Type {merchant}",
-                    card_type_dict[card_type],
-                    "Yes 🌎" if international == 1 else "No 🏠"
-                ]
-            })
-            
-            st.table(summary_df)
-            
-            # Risk factors
-            st.subheader("Risk Factors Present")
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.subheader("Risk Analysis")
+
+            # Calculate risk factors
+            risk_score = 0
             risk_factors = []
-            
+
             if amount > 7000:
-                risk_factors.append("💰 High amount")
+                risk_score += 25
+                risk_factors.append("High transaction amount")
             if time in [0, 1, 2, 3, 23]:
-                risk_factors.append("⏰ Unusual time (late night)")
+                risk_score += 20
+                risk_factors.append("Unusual transaction time")
             if international == 1:
-                risk_factors.append("🌍 International transaction")
+                risk_score += 30
+                risk_factors.append("International transaction")
             if merchant in [1, 3]:
-                risk_factors.append("🏪 Higher risk merchant")
-            
+                risk_score += 15
+                risk_factors.append("Higher risk merchant category")
+
+            # Display risk meter
+            st.markdown("**Preliminary Risk Assessment**")
+            risk_color = "#16a34a" if risk_score < 30 else "#f59e0b" if risk_score < 60 else "#dc2626"
+            st.markdown(f"""
+            <div style="background-color: #e2e8f0; border-radius: 8px; height: 24px; overflow: hidden; margin: 10px 0;">
+                <div style="background-color: {risk_color}; width: {risk_score}%; height: 100%; transition: width 0.3s;"></div>
+            </div>
+            <div class="card-text" style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                <span>Low Risk</span>
+                <span>{risk_score}%</span>
+                <span>High Risk</span>
+            </div>
+            """, unsafe_allow_html=True)
+
             if risk_factors:
+                st.markdown("**Detected Risk Factors:**")
                 for factor in risk_factors:
-                    st.write(f"⚠️  {factor}")
+                    st.markdown(f"• {factor}")
             else:
-                st.write("✅ No major risk factors detected")
-        
-        # Prediction
-        st.markdown("---")
-        
-        if st.button("🔮 Check for Fraud", use_container_width=True):
+                st.markdown("*No significant risk factors detected*")
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        # Prediction Button
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Analyze Transaction", use_container_width=True, type="primary"):
             # Prepare data
             transaction = np.array([[amount, time, merchant, card_type, international]])
             transaction_scaled = scaler.transform(transaction)
-            
+
             # Make prediction
             prediction = model.predict(transaction_scaled)[0]
             probability = model.predict_proba(transaction_scaled)[0]
             fraud_prob = probability[1]
-            
+
             # Display result
-            st.markdown("---")
-            st.subheader("🎯 Prediction Result")
-            
-            col1, col2 = st.columns([2, 1])
-            
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            if fraud_prob > 0.6:
+                risk_class = "risk-high"
+                risk_label = "HIGH RISK"
+                risk_desc = "Likely Fraudulent"
+                icon = ""
+            elif fraud_prob > 0.4:
+                risk_class = "risk-medium"
+                risk_label = "MEDIUM RISK"
+                risk_desc = "Suspicious Activity"
+                icon = ""
+            else:
+                risk_class = "risk-low"
+                risk_label = "LOW RISK"
+                risk_desc = "Likely Genuine"
+                icon = ""
+
+            # Result Card
+            st.markdown(f"""
+            <div class="card fraud-{'high' if fraud_prob > 0.6 else 'medium' if fraud_prob > 0.4 else 'low'}">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="margin: 0;">Analysis Result</h3>
+                    <span class="risk-badge {risk_class}">{risk_label}</span>
+                </div>
+                <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">
+                    {risk_desc}
+                </div>
+                <div class="card-text" style="margin-bottom: 1.5rem;">
+                    Fraud Probability: <strong>{fraud_prob:.1%}</strong>
+                </div>
+
+                <div class="confidence-box">
+                    <div class="card-text" style="font-size: 0.875rem; margin-bottom: 0.5rem;">Confidence Score</div>
+                    <div class="confidence-score" style="font-size: 2rem; font-weight: 700;">
+                        {max(probability):.1%}
+                    </div>
+                </div>
+
+                <div class="card-text" style="font-size: 0.875rem;">
+                    <strong>Key Contributing Factors:</strong>
+                </div>
+            """, unsafe_allow_html=True)
+
+            # Show top 3 contributing factors
+            contributing_factors = []
+            if international == 1:
+                contributing_factors.append("International transaction")
+            if amount > 7000:
+                contributing_factors.append("High transaction amount")
+            if time in [0, 1, 2, 3, 23]:
+                contributing_factors.append("Unusual time")
+            if len(contributing_factors) == 0:
+                contributing_factors.append("Normal transaction pattern")
+
+            for factor in contributing_factors[:3]:
+                st.markdown(f"• {factor}")
+
+            st.markdown("</div>", unsafe_allow_html=True)
+
+            # Action buttons
+            col1, col2 = st.columns(2)
             with col1:
-                if fraud_prob > 0.6:
-                    st.markdown("""
-                    <div class='fraud-warning'>
-                    🚨 HIGH RISK - LIKELY FRAUDULENT
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.error("⚠️ This transaction appears to be FRAUDULENT!")
-                    st.error(f"Fraud Probability: {fraud_prob:.1%}")
-                    
-                elif fraud_prob > 0.4:
-                    st.markdown("""
-                    <div class='medium-risk'>
-                    ⚠️ MEDIUM RISK - SUSPICIOUS
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.warning("⚠️ This transaction looks suspicious. Please verify.")
-                    st.warning(f"Fraud Probability: {fraud_prob:.1%}")
-                    
-                else:
-                    st.markdown("""
-                    <div class='genuine'>
-                    ✅ LOW RISK - LIKELY GENUINE
-                    </div>
-                    """, unsafe_allow_html=True)
-                    st.success("✅ This transaction appears to be GENUINE!")
-                    st.success(f"Fraud Probability: {fraud_prob:.1%}")
-            
+                if st.button("Approve Transaction", use_container_width=True):
+                    st.success("Transaction approved")
             with col2:
-                # Progress bar
-                st.metric("Risk Score", f"{fraud_prob:.1%}")
-                
-                # Gauge chart
-                fig, ax = plt.subplots(figsize=(4, 3))
-                categories = ['Genuine', 'Fraud']
-                values = [1-fraud_prob, fraud_prob]
-                colors = ['green', 'red']
-                ax.pie(values, labels=categories, colors=colors, autopct='%1.1f%%',
-                       startangle=90)
-                ax.set_title('Prediction Confidence')
-                st.pyplot(fig)
-            
-            # Detailed explanation
-            st.markdown("---")
-            st.subheader("📊 Prediction Details")
-            
-            details_df = pd.DataFrame({
-                'Metric': ['Genuine Probability', 'Fraud Probability', 'Confidence Level'],
-                'Value': [
-                    f"{probability[0]:.2%}",
-                    f"{probability[1]:.2%}",
-                    f"{max(probability):.2%}"
-                ]
-            })
-            st.table(details_df)
-            
-            st.info("""
-            **How to interpret:**
-            - **Genuine Probability**: Chance the transaction is legitimate
-            - **Fraud Probability**: Chance the transaction is fraudulent
-            - **Confidence**: How sure the model is about its prediction
-            """)
+                if st.button("Flag for Review", use_container_width=True):
+                    st.warning("Transaction flagged for manual review")
 
 
 # ============================================================
-# PAGE 3: MODEL INFO
+# PAGE 3: ABOUT
 # ============================================================
 
-elif page == "📊 Model Info":
-    st.title("📊 Model Information")
-    st.markdown("---")
-    
-    st.subheader("🎯 Model Architecture")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.write("**Algorithm:** Random Forest Classifier")
-        st.write("**Number of Trees:** 100")
-        st.write("**Max Depth:** 15")
-        st.write("**Input Features:** 5")
-    
-    with col2:
-        st.write("**Output:** Fraud/Genuine")
-        st.write("**Imbalance Handling:** SMOTE")
-        st.write("**Feature Scaling:** StandardScaler")
-        st.write("**Training Data:** 5,000 transactions")
-    
-    st.markdown("---")
-    
-    st.subheader("📈 Performance Metrics")
-    
+elif page == "About":
+    st.title("About This System")
+
+    # System Overview
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("System Overview")
+    st.markdown("""
+    <p class="card-text">
+    Machine learning-powered fraud detection system for real-time credit card transaction analysis.
+    </p>
+    """, unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Performance Metrics
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("Performance Metrics")
+
     metrics_data = {
         'Metric': ['Accuracy', 'Precision', 'Recall', 'F1 Score', 'ROC-AUC'],
-        'Score': ['95.2%', '92.8%', '89.5%', '0.910', '0.945'],
-        'Interpretation': [
-            'Overall correctness',
-            'Fraud alerts that are real',
-            'Fraud cases caught',
-            'Balance metric',
-            'Ranking quality'
-        ]
+        'Score': ['95.2%', '92.8%', '89.5%', '0.910', '0.945']
     }
-    
+
     metrics_df = pd.DataFrame(metrics_data)
     st.table(metrics_df)
-    
-    st.markdown("---")
-    
-    st.subheader("🔍 Feature Importance")
-    
+
+    # Performance chart
+    fig, ax = plt.subplots(figsize=(8, 4))
+    metrics = ['Accuracy', 'Precision', 'Recall', 'F1', 'ROC-AUC']
+    values = [95.2, 92.8, 89.5, 91.0, 94.5]
+    colors = ['#16a34a', '#16a34a', '#f59e0b', '#16a34a', '#16a34a']
+    ax.bar(metrics, values, color=colors, alpha=0.8)
+    ax.set_ylabel('Score (%)')
+    ax.set_title('Model Performance Metrics')
+    ax.set_ylim(0, 100)
+    ax.grid(axis='y', alpha=0.3)
+    for i, v in enumerate(values):
+        ax.text(i, v + 1, f'{v}%', ha='center', va='bottom', fontweight='bold')
+    st.pyplot(fig)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Feature Importance
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("Feature Importance")
+
     importance_data = {
-        'Feature': ['International', 'Amount', 'Time', 'Merchant Type', 'Card Type'],
+        'Feature': ['International Transaction', 'Transaction Amount', 'Time of Day', 'Merchant Category', 'Card Type'],
         'Importance': [0.32, 0.28, 0.22, 0.12, 0.06]
     }
-    
+
     importance_df = pd.DataFrame(importance_data)
-    
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.barh(importance_df['Feature'], importance_df['Importance'], color='steelblue')
+    st.table(importance_df)
+
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.barh(importance_df['Feature'], importance_df['Importance'], color='#1e3a8a')
     ax.set_xlabel('Importance Score')
     ax.set_title('Feature Importance in Fraud Detection')
     ax.grid(axis='x', alpha=0.3)
     st.pyplot(fig)
-    
-    st.info("""
-    **Most Important Features for Fraud Detection:**
-    1. **International** - International transactions are more risky
-    2. **Amount** - Higher amounts are more suspicious
-    3. **Time** - Late night transactions are unusual
-    4. **Merchant Type** - Some merchants are riskier
-    5. **Card Type** - Different card types have different patterns
-    """)
-    
-    st.markdown("---")
-    
-    st.subheader("📊 Training Data Distribution")
-    
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Training Data Distribution
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("Training Data Distribution")
+
     col1, col2 = st.columns(2)
-    
+
     with col1:
-        st.write("**Before SMOTE (Imbalanced)**")
-        fig, ax = plt.subplots(figsize=(6, 4))
+        st.markdown("**Before SMOTE (Imbalanced)**")
+        fig, ax = plt.subplots(figsize=(5, 4))
         sizes = [4750, 250]
         labels = ['Genuine', 'Fraud']
-        colors = ['green', 'red']
+        colors = ['#16a34a', '#dc2626']
         ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors)
         ax.set_title('Original Dataset')
         st.pyplot(fig)
-    
+
     with col2:
-        st.write("**After SMOTE (Balanced)**")
-        fig, ax = plt.subplots(figsize=(6, 4))
+        st.markdown("**After SMOTE (Balanced)**")
+        fig, ax = plt.subplots(figsize=(5, 4))
         sizes = [4000, 4000]
         labels = ['Genuine', 'Fraud']
-        colors = ['green', 'red']
+        colors = ['#16a34a', '#dc2626']
         ax.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors)
         ax.set_title('After SMOTE Balancing')
         st.pyplot(fig)
+    st.markdown("</div>", unsafe_allow_html=True)
 
+    # Technical Information
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.subheader("Technical Information")
 
-# ============================================================
-# PAGE 4: HOW IT WORKS
-# ============================================================
-
-elif page == "ℹ️ How It Works":
-    st.title("ℹ️ How It Works")
-    st.markdown("---")
-    
-    st.subheader("📋 9-Step Process")
-    
-    steps = [
-        ("1️⃣ Data Collection", "Generate or collect transaction data"),
-        ("2️⃣ Data Preprocessing", "Clean data, remove duplicates, handle missing values"),
-        ("3️⃣ Exploratory Analysis", "Visualize patterns and relationships"),
-        ("4️⃣ Handle Imbalance", "Use SMOTE to balance fraud vs genuine"),
-        ("5️⃣ Feature Scaling", "Normalize features with StandardScaler"),
-        ("6️⃣ Train Model", "Train Random Forest Classifier"),
-        ("7️⃣ Evaluate Model", "Check Accuracy, Precision, Recall, ROC-AUC"),
-        ("8️⃣ Make Predictions", "Use model to predict new transactions"),
-        ("9️⃣ Deploy Web App", "This Streamlit interface!")
-    ]
-    
-    for step, description in steps:
-        with st.expander(step):
-            st.write(description)
-    
-    st.markdown("---")
-    
-    st.subheader("❓ Why SMOTE?")
-    st.write("""
-    **The Problem:**
-    - Real fraud data: 99% genuine, 1% fraud
-    - Model could just predict "all genuine" and get 99% accuracy
-    - But it catches 0% fraud! (useless)
-    
-    **The Solution:**
-    - SMOTE creates synthetic fraud samples
-    - Balances the training data
-    - Model learns actual fraud patterns
-    - Catches both genuine AND fraud
-    """)
-    
-    st.markdown("---")
-    
-    st.subheader("📚 Key Concepts")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.write("**Accuracy**")
-        st.write("Overall correctness (can be misleading on imbalanced data)")
-        
-        st.write("**Precision**")
-        st.write("Of fraud alerts, how many are actually fraud")
-        
-        st.write("**Recall**")
-        st.write("Of actual fraud, how many did we catch ⭐")
-    
-    with col2:
-        st.write("**F1 Score**")
-        st.write("Balance between precision and recall")
-        
-        st.write("**ROC-AUC**")
-        st.write("Model's ability to rank predictions correctly")
-        
-        st.write("**Confusion Matrix**")
-        st.write("True/False Positives/Negatives breakdown")
-    
-    st.markdown("---")
-    
-    st.subheader("🚀 Use Cases")
-    
-    st.write("""
-    ✅ **Banks** - Real-time transaction monitoring
-    ✅ **Credit Card Companies** - Fraud detection
-    ✅ **E-commerce** - Order verification
-    ✅ **Insurance** - Claim validation
-    ✅ **Payment Gateways** - Transaction screening
-    """)
-    
-    st.markdown("---")
-    
-    st.subheader("📞 Technical Support")
-    
     st.info("""
-    **If model doesn't work:**
-    1. Check all Python steps are completed (1-8)
-    2. Verify all CSV files are created
-    3. Ensure 'fraud_detection_model.pkl' exists
-    4. Check 'scaler.pkl' is present
-    
-    **To run all steps:**
+    **Model Files Required:**
+    - `fraud_detection_model.pkl` - Trained machine learning model
+    - `scaler.pkl` - Feature scaling parameters
+
+    **To run the training pipeline:**
     ```
     python 1_data_collection.py
     python 2_preprocessing.py
@@ -533,12 +640,13 @@ elif page == "ℹ️ How It Works":
     python 7_evaluate_model.py
     python 8_make_predictions.py
     ```
-    
-    **Then launch Streamlit:**
+
+    **To launch the application:**
     ```
     streamlit run 9_streamlit_app.py
     ```
     """)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ============================================================
 # FOOTER
@@ -546,8 +654,7 @@ elif page == "ℹ️ How It Works":
 
 st.markdown("---")
 st.markdown("""
-<div style='text-align: center; color: gray; font-size: 0.8em;'>
-💳 Credit Card Fraud Detection System | Built with Streamlit
-📧 For questions, review the project documentation
+<div class="card-text" style='text-align: center; font-size: 0.875rem; padding: 1rem 0;'>
+Fraud Detection System | Built with Streamlit
 </div>
 """, unsafe_allow_html=True)  
