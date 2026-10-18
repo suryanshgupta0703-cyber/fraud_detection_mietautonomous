@@ -600,33 +600,11 @@ elif page == "Detect Fraud":
                 risk_desc = "Likely Genuine"
                 icon = ""
 
-            # Result Card
-            st.markdown(f"""
-            <div class="card fraud-{'high' if fraud_prob > 0.6 else 'medium' if fraud_prob > 0.4 else 'low'}">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3 style="margin: 0;">Analysis Result</h3>
-                    <span class="risk-badge {risk_class}">{risk_label}</span>
-                </div>
-                <div style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem;">
-                    {risk_desc}
-                </div>
-                <div class="card-text" style="margin-bottom: 1.5rem;">
-                    Fraud Probability: <strong>{fraud_prob:.1%}</strong>
-                </div>
-
-                <div class="confidence-box">
-                    <div class="card-text" style="font-size: 0.875rem; margin-bottom: 0.5rem;">Confidence Score</div>
-                    <div class="confidence-score" style="font-size: 2rem; font-weight: 700;">
-                        {max(probability):.1%}
-                    </div>
-                </div>
-
-                <div class="card-text" style="font-size: 0.875rem;">
-                    <strong>Key Contributing Factors:</strong>
-                </div>
-            """, unsafe_allow_html=True)
-
-            # Show top 3 contributing factors
+            # Result Card - built as one self-contained HTML block to avoid two bugs:
+            # 1. Indented lines after blank lines inside triple-quoted strings are
+            #    treated as Markdown code blocks by the 4-space rule.
+            # 2. Splitting opening/closing <div> across separate st.markdown() calls
+            #    breaks the browser DOM (each call gets its own wrapper div).
             contributing_factors = []
             if international == 1:
                 contributing_factors.append("International transaction")
@@ -634,13 +612,29 @@ elif page == "Detect Fraud":
                 contributing_factors.append("High transaction amount")
             if time in [0, 1, 2, 3, 23]:
                 contributing_factors.append("Unusual time")
-            if len(contributing_factors) == 0:
+            if not contributing_factors:
                 contributing_factors.append("Normal transaction pattern")
 
-            for factor in contributing_factors[:3]:
-                st.markdown(f"• {factor}")
-
-            st.markdown("</div>", unsafe_allow_html=True)
+            factors_html = "".join(
+                f'<div style="margin:0.25rem 0;">• {f}</div>'
+                for f in contributing_factors[:3]
+            )
+            card_level = "high" if fraud_prob > 0.6 else "medium" if fraud_prob > 0.4 else "low"
+            result_card_html = (
+                f'<div class="card fraud-{card_level}">'
+                f'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">'  
+                f'<h3 style="margin:0;">Analysis Result</h3>'
+                f'<span class="risk-badge {risk_class}">{risk_label}</span></div>'
+                f'<div style="font-size:1.5rem;font-weight:600;margin-bottom:0.5rem;">{risk_desc}</div>'
+                f'<div class="card-text" style="margin-bottom:1.5rem;">Fraud Probability: <strong>{fraud_prob:.1%}</strong></div>'
+                f'<div style="background:rgba(0,0,0,0.05);border-radius:8px;padding:1rem;margin-bottom:1rem;">'
+                f'<div class="card-text" style="font-size:0.875rem;margin-bottom:0.5rem;">Confidence Score</div>'
+                f'<div style="font-size:2rem;font-weight:700;">{max(probability):.1%}</div></div>'
+                f'<div class="card-text" style="font-size:0.875rem;margin-bottom:0.5rem;"><strong>Key Contributing Factors:</strong></div>'
+                f'<div style="font-size:0.875rem;">{factors_html}</div>'
+                f'</div>'
+            )
+            st.markdown(result_card_html, unsafe_allow_html=True)
 
             # Action buttons
             col1, col2 = st.columns(2)
