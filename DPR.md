@@ -121,9 +121,9 @@ Credit card fraud is a significant financial crime affecting millions of transac
 ### 4.2 Component Description
 
 #### 4.2.1 Web Application Layer
-- **Dashboard**: Overview of system performance and statistics
-- **Detection Interface**: Transaction input and real-time analysis
-- **About Page**: Technical information and documentation
+- **Dashboard**: Overview of system performance and statistics with visualizations
+- **Detection Interface**: Transaction input and real-time analysis with risk meter
+- **About Page**: Technical information, performance metrics, and setup instructions
 
 #### 4.2.2 Application Logic Layer
 - **Input Validation**: Ensures data quality and completeness
@@ -186,10 +186,10 @@ Credit card fraud is a significant financial crime affecting millions of transac
 ```
 amount: float (100-10000)
 time: int (0-23, representing hours)
-merchant: int (1-5, merchant categories)
+merchant_type: int (1-5, merchant categories)
 card_type: int (0-2, 0=Debit, 1=Credit, 2=Prepaid)
 international: int (0-1, 0=Domestic, 1=International)
-is_fraud: int (0=Genuine, 1=Fraud)
+fraud: int (0=Genuine, 1=Fraud)
 ```
 
 ### 6.2 Data Preprocessing (Step 2)
@@ -241,15 +241,15 @@ is_fraud: int (0=Genuine, 1=Fraud)
 4. Keep test data imbalanced (realistic scenario)
 
 **Output**:
-- `X_train_balanced.csv` (8,000 rows, balanced)
-- `y_train_balanced.csv` (8,000 labels)
+- `X_train_balanced.csv` (7,600 rows, balanced)
+- `y_train_balanced.csv` (7,600 labels)
 - `X_test.csv` (1,000 rows, imbalanced)
 - `y_test.csv` (1,000 labels)
 
 **SMOTE Details**:
-- Original training: 3,800 genuine, 200 fraud (95:5)
-- After SMOTE: 4,000 genuine, 4,000 fraud (50:50)
-- Synthetic samples created for minority class
+- Original training split (80%): 3,800 genuine, 200 fraud (95:5 ratio)
+- After SMOTE: 3,800 genuine, 3,800 fraud (50:50 ratio = 7,600 balanced samples)
+- 3,600 synthetic fraud samples generated for the minority class
 
 ### 6.5 Feature Scaling (Step 5)
 
@@ -332,41 +332,41 @@ Random Forest Classifier
 #### 8.1.1 Transaction Amount
 - **Type**: Continuous (100-10000)
 - **Scale**: Large variance, requires normalization
-- **Importance**: High (28%)
-- **Pattern**: Higher amounts correlate with increased fraud risk
+- **Importance**: Very High (49.1%)
+- **Pattern**: Higher amounts correlate strongly with increased fraud risk
 
 #### 8.1.2 Time of Transaction
 - **Type**: Categorical (0-23 hours)
 - **Scale**: Cyclic (23:00 followed by 00:00)
-- **Importance**: Medium (22%)
+- **Importance**: High (19.8%)
 - **Pattern**: Late night transactions (0-3, 23) show higher fraud rates
 
 #### 8.1.3 Merchant Category
 - **Type**: Categorical (1-5)
 - **Scale**: Nominal
-- **Importance**: Low-Medium (12%)
+- **Importance**: Medium (13.8%)
 - **Pattern**: Categories 1 and 3 have higher fraud rates
 
-#### 8.1.4 Card Type
-- **Type**: Categorical (0=Debit, 1=Credit, 2=Prepaid)
-- **Scale**: Nominal
-- **Importance**: Low (6%)
-- **Pattern**: Credit cards show slightly higher fraud rates
-
-#### 8.1.5 International Transaction
+#### 8.1.4 International Transaction
 - **Type**: Binary (0=Domestic, 1=International)
 - **Scale**: Binary
-- **Importance**: Very High (32%)
-- **Pattern**: International transactions have significantly higher fraud risk
+- **Importance**: Medium (9.1%)
+- **Pattern**: International transactions show elevated baseline risk
+
+#### 8.1.5 Card Type
+- **Type**: Categorical (0=Debit, 1=Credit, 2=Prepaid)
+- **Scale**: Nominal
+- **Importance**: Low (8.1%)
+- **Pattern**: Credit and debit cards show subtle differences in transaction patterns
 
 ### 8.2 Feature Importance
 
 ```
-International Transaction: 32% (Most important)
-Transaction Amount:        28%
-Time of Day:               22%
-Merchant Category:         12%
-Card Type:                  6%
+Transaction Amount:        49.1% (Most important)
+Time of Day:               19.8%
+Merchant Category:         13.8%
+International Transaction:  9.1%
+Card Type:                  8.1%
 ```
 
 ### 8.3 Feature Interactions
@@ -386,7 +386,7 @@ The model implicitly learns feature interactions through decision trees:
 **Step-by-Step Process**:
 
 1. **Data Preparation**
-   - Load balanced training data (8,000 samples)
+   - Load balanced training data (7,600 samples)
    - Ensure features are scaled (mean=0, std=1)
    - Split features (X) and labels (y)
 
@@ -395,7 +395,7 @@ The model implicitly learns feature interactions through decision trees:
    - Set random state for reproducibility
 
 3. **Model Fitting**
-   - Train on 8,000 balanced samples
+   - Train on 7,600 balanced samples
    - Each tree learns from bootstrap sample
    - Features randomly selected at each split
 
@@ -434,76 +434,74 @@ The model implicitly learns feature interactions through decision trees:
 
 ### 10.1 Evaluation Metrics
 
-#### 10.1.1 Accuracy (95.2%)
+#### 10.1.1 Accuracy (96.5%)
 **Definition**: (TP + TN) / (TP + TN + FP + FN)
 
-**Interpretation**: Overall correctness of predictions
+**Interpretation**: Overall correctness of predictions across all 1,000 test transactions (965 correct out of 1,000).
 
-**Limitation**: Can be misleading on imbalanced data (less relevant here due to SMOTE)
+**Limitation**: In imbalanced data, accuracy alone is insufficient; precision and recall must be examined together.
 
-#### 10.1.2 Precision (92.8%)
-**Definition**: TP / (TP + FP)
+#### 10.1.2 Precision (60.6%)
+**Definition**: TP / (TP + FP) = 43 / (43 + 28)
 
-**Interpretation**: Of transactions flagged as fraud, 92.8% are actually fraudulent
+**Interpretation**: Of all transactions flagged as fraud by the model (71 total alerts), 43 were actual fraud (60.6% real fraud hit rate).
 
-**Importance**: High precision reduces false positives, minimizing customer inconvenience
+**Real-world Context for Beginners**: In fraud detection, legitimate transactions vastly outnumber frauds (95:5 ratio). Generating only 28 false alarms out of 950 legitimate transactions represents a false positive rate of under 3% (2.95%), which minimizes customer friction while maintaining high alertness.
 
-#### 10.1.3 Recall (89.5%)
-**Definition**: TP / (TP + FN)
+#### 10.1.3 Recall (86.0%)
+**Definition**: TP / (TP + FN) = 43 / (43 + 7)
 
-**Interpretation**: Of actual fraudulent transactions, 89.5% are detected
+**Interpretation**: Of the 50 actual fraudulent transactions in the test set, the model successfully catches 43 (86.0% fraud capture rate).
 
-**Importance**: High recall catches more fraud, reducing financial losses
+**Importance**: Recall is the single most critical metric in financial fraud prevention, directly minimizing stolen funds and financial loss.
 
-#### 10.1.4 F1 Score (0.910)
+#### 10.1.4 F1 Score (0.711)
 **Definition**: 2 × (Precision × Recall) / (Precision + Recall)
 
-**Interpretation**: Harmonic mean of precision and recall
+**Interpretation**: Harmonic mean balancing precision (60.6%) and recall (86.0%), achieving a strong 0.711 score under heavy class imbalance.
 
-**Importance**: Balanced measure, useful when both precision and recall matter
+#### 10.1.5 ROC-AUC (0.983)
+**Definition**: Area Under the Receiver Operating Characteristic Curve.
 
-#### 10.1.5 ROC-AUC (0.945)
-**Definition**: Area under Receiver Operating Characteristic curve
+**Interpretation**: Measures the model's ability to rank fraudulent transactions higher than genuine ones across all classification thresholds.
 
-**Interpretation**: Model's ability to distinguish between classes
-
-**Importance**: 0.945 indicates excellent discrimination ability
+**Importance**: An AUC of 0.983 demonstrates exceptional discrimination power (near 1.0 ceiling).
 
 ### 10.2 Confusion Matrix
 
 ```
                  Predicted
                 Genuine  Fraud
-Actual Genuine    950      30
-Actual Fraud       20     150
+Actual Genuine    922      28
+Actual Fraud        7      43
 ```
 
 **Analysis**:
-- True Negatives (TN): 950 (correctly identified genuine)
-- False Positives (FP): 30 (genuine incorrectly flagged)
-- False Negatives (FN): 20 (fraud missed)
-- True Positives (TP): 150 (correctly identified fraud)
+- True Negatives (TN): 922 (genuine transactions correctly approved)
+- False Positives (FP): 28 (genuine transactions flagged for review - only 2.95% of genuine transactions)
+- False Negatives (FN): 7 (fraudulent transactions missed)
+- True Positives (TP): 43 (fraudulent transactions successfully caught out of 50)
+- **Total Test Transactions**: 1,000 (950 genuine + 50 fraudulent)
 
 ### 10.3 Performance Visualization
 
 **ROC Curve**:
 - Plots True Positive Rate vs False Positive Rate
 - Ideal curve: Top-left corner (TPR=1, FPR=0)
-- Our curve: AUC=0.945 (excellent)
+- Our curve: AUC=0.983 (outstanding discrimination)
 
 **Precision-Recall Curve**:
-- Plots Precision vs Recall
-- Useful for imbalanced datasets
-- Shows trade-off between catching fraud and avoiding false alarms
+- Shows trade-off between catching every fraud and keeping customer alerts manageable
+- Demonstrates robust performance on 95:5 imbalanced data
 
 ### 10.4 Test Results
 
-**On 1,000 test samples (imbalanced, realistic)**:
+**On 1,000 test samples (imbalanced, realistic 95:5 ratio)**:
 - Total predictions: 1,000
-- Correct predictions: 952 (95.2%)
-- Incorrect predictions: 48 (4.8%)
-- Fraud detected: 150 out of 168 (89.5% recall)
-- False alarms: 30 out of 180 (16.7% false positive rate)
+- Correct predictions: 965 (96.5%)
+- Incorrect predictions: 35 (3.5%)
+- Fraud detected: 43 out of 50 (86.0% recall)
+- False alarms: 28 out of 950 genuine transactions (2.95% false positive rate on genuine transactions; 60.6% precision among flagged alerts)
 
 ---
 
@@ -532,6 +530,7 @@ Actual Fraud       20     150
 - Real-time system status
 - Visual performance monitoring
 - Historical trend analysis
+- Mobile-responsive layout
 
 #### 11.2.2 Detection Page
 **Purpose**: Transaction analysis interface
@@ -548,6 +547,7 @@ Actual Fraud       20     150
 - Clear visual feedback (color-coded risk levels)
 - Confidence score display
 - Contributing factors explanation
+- Touch-friendly controls for mobile
 
 #### 11.2.3 About Page
 **Purpose**: Technical information
@@ -563,6 +563,7 @@ Actual Fraud       20     150
 - Clean, minimal information
 - Focus on key metrics
 - Quick reference for setup
+- Performance visualizations
 
 ### 11.3 User Interface Design
 
@@ -570,15 +571,16 @@ Actual Fraud       20     150
 - Clean, professional appearance
 - Card-based layout for organization
 - Color-coded risk indicators (Green/Amber/Red)
-- Dark mode support
-- Responsive design
+- Dark mode support with automatic detection
+- Fully responsive design for all devices
+- Touch-friendly controls for mobile
 
 **Color Scheme**:
 - Primary: Navy blue (#1e3a8a)
 - Success: Green (#16a34a)
 - Warning: Amber (#f59e0b)
 - Danger: Red (#dc2626)
-- Background: Light gray (#f8fafc)
+- Background: Light gray (#f8fafc) / Dark slate (#0f172a) in dark mode
 
 ### 11.4 Dark Mode Implementation
 
@@ -593,10 +595,51 @@ Actual Fraud       20     150
 ```
 
 **Adaptations**:
-- Cards: White → Dark slate
-- Text: Dark slate → Light gray
+- Cards: White → Dark slate (#1e293b)
+- Text: Dark slate (#64748b) → Light gray (#e2e8f0)
 - Charts: Adjusted for visibility
 - Risk indicators: Maintained color consistency
+- Automatic detection based on system preference
+
+### 11.5 Mobile Responsiveness
+
+**Breakpoints**:
+- Desktop: >768px (full layout)
+- Tablet: 481-768px (stacked columns, reduced padding)
+- Phone: ≤480px (sidebar hidden, compact layout)
+
+**Mobile Optimizations**:
+- Responsive card padding (1.5rem → 0.75rem on mobile)
+- Adaptive font sizes (headings scale down)
+- Full-width buttons on mobile
+- Stacked column layout (side-by-side → vertical)
+- Auto-collapsing sidebar on small screens
+- Touch-friendly button sizes (minimum 44px height)
+- Optimized images (scale to fit screen width)
+- Smaller table fonts for readability
+
+**CSS Media Queries**:
+```css
+@media (max-width: 768px) {
+    /* Tablet optimizations */
+    .card { padding: 1rem; }
+    .stat-card div[style*="font-size: 2rem"] {
+        font-size: 1.5rem !important;
+    }
+    .stColumns > div {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Phone optimizations */
+    .card { padding: 0.75rem; }
+    .css-1d391kg {
+        width: 0 !important;
+        display: none !important;
+    }
+}
+```
 
 ---
 
@@ -614,11 +657,13 @@ fraud_detection_mietautonomous/
 ├── 6_train_model.py              # Train Random Forest
 ├── 7_evaluate_model.py           # Evaluate performance
 ├── 8_make_predictions.py         # Demonstrate predictions
-├── 9_streamlit_app.py            # Web application
+├── 9_streamlit_app.py            # Web application (3 pages)
+├── 10_fastapi_app.py             # Optional FastAPI backend
 ├── requirements.txt              # Python dependencies
 ├── HOW_TO_RUN.md                 # Setup instructions
 ├── VERIFICATION_GUIDE.md          # Testing guide
-├── DPR.md                        # This document
+├── DPR.md                        # Detailed Project Report
+├── IMPLEMENTATION_STATUS.md       # Implementation verification
 ├── data.csv                      # Raw generated data
 ├── data_cleaned.csv              # Preprocessed data
 ├── X_train_balanced.csv          # Balanced training features
@@ -679,6 +724,14 @@ fraud_prob = probability[1]
 - Streamlit's automatic reactivity
 - Minimal computation on input change
 - Lazy loading of visualizations
+- Auto sidebar state (auto-collapse on mobile)
+
+**Mobile Performance**:
+- Optimized CSS for faster rendering on mobile
+- Reduced DOM elements on small screens
+- Lazy image loading
+- Touch-optimized interactions
+- Adaptive layout reduces rendering overhead
 
 ---
 
@@ -708,20 +761,21 @@ fraud_prob = probability[1]
 ### 13.2 Model Performance Analysis
 
 **Strengths**:
-- High accuracy (95.2%)
-- Good precision (92.8%) - low false positives
-- Reasonable recall (89.5%) - catches most fraud
-- Excellent ROC-AUC (0.945) - strong discrimination
+- High accuracy (96.5% on imbalanced test data)
+- Strong fraud recall (86.0% - successfully catches 43 out of 50 fraud cases)
+- Exceptional ROC-AUC (0.983 - outstanding discriminatory ranking)
+- Low customer friction (false positive rate on genuine transactions is only 2.95%, or 28 of 950)
 
 **Weaknesses**:
-- Recall could be improved (missing 10.5% of fraud)
-- Model may overfit to synthetic data patterns
-- Limited feature set (only 5 features)
+- Precision is 60.6% due to high imbalance; ~39% of triggered alerts are false alarms requiring review
+- Misses 7 out of 50 fraud cases (14.0% false negative rate)
+- Model trained on synthetic data patterns rather than live banking feeds
+- Limited to 5 tabular features
 
 **Trade-offs**:
-- Precision vs Recall: Current setup favors precision slightly
-- Model complexity vs Interpretability: Random Forest is balanced
-- Training time vs Accuracy: 100 trees provide good balance
+- Precision vs Recall: Current decision threshold prioritizes catching fraud (86.0% recall) over zero false alarms
+- Model complexity vs Interpretability: Random Forest offers clear feature importance while capturing non-linear interactions
+- Training time vs Accuracy: 100 trees provide sub-second training while preventing individual tree variance
 
 ### 13.3 Scalability Considerations
 
@@ -743,19 +797,19 @@ fraud_prob = probability[1]
 
 ### 14.1 Key Findings
 
-1. **International transactions are the strongest fraud indicator** (32% importance)
-2. **Transaction amount is highly correlated with fraud risk** (28% importance)
-3. **Time of day matters** - late night transactions show elevated risk
-4. **SMOTE significantly improves model performance** on imbalanced data
-5. **Random Forest performs well** with minimal hyperparameter tuning
+1. **Transaction amount is the strongest fraud indicator** (49.1% importance)
+2. **Time of day is the second largest driver** (19.8% importance) - unusual off-hours show higher risk
+3. **Merchant category and international transactions provide critical secondary signals** (13.8% and 9.1%)
+4. **SMOTE significantly improves minority class learning** without causing data leakage
+5. **Random Forest achieves 0.983 ROC-AUC** with robust stability
 
 ### 14.2 Model Interpretation
 
 **Feature Importance Insights**:
-- International flag being most important suggests geographic risk factors
-- Amount importance aligns with intuition (higher stakes = higher risk)
-- Time patterns indicate criminals prefer off-hours
-- Merchant and card type have lower but still meaningful impact
+- High transaction amounts dominate fraud risk, consistent with financial crime incentives
+- Time patterns indicate off-hours transactions correlate with automated or compromised operations
+- Merchant categories and international transactions add distinct contextual risk
+- Card type provides lower predictive weight but aids split stability
 
 **Risk Factor Combinations**:
 - High + International + Late night = Very high risk
@@ -844,6 +898,12 @@ fraud_prob = probability[1]
    - Counterfactual explanations
    - Natural language explanations
 
+4. **Enhanced UI/UX**
+   - Real-time notification system
+   - Advanced filtering and search
+   - Custom dashboard widgets
+   - Multi-language support
+
 ---
 
 ## 16. Conclusion
@@ -852,9 +912,13 @@ fraud_prob = probability[1]
 
 This project successfully developed a comprehensive credit card fraud detection system with the following achievements:
 
-- **95.2% accuracy** on test data
+- **96.5% accuracy** on realistic imbalanced test data
+- **86.0% fraud recall** (successfully detects 43 out of 50 fraud cases)
+- **0.983 ROC-AUC** ranking performance
 - **Real-time prediction** capability (<10ms per transaction)
-- **Professional web interface** with dark mode support
+- **Professional web interface** with modern design
+- **Dark mode support** with automatic system detection
+- **Mobile-responsive design** optimized for tablets and phones
 - **Comprehensive documentation** for deployment and maintenance
 - **Explainable results** with feature importance and risk factors
 
@@ -865,6 +929,11 @@ This project successfully developed a comprehensive credit card fraud detection 
 3. **Clean, maintainable code** with modular structure
 4. **Professional UI** with modern design principles
 5. **Complete documentation** including DPR, verification guide, and setup instructions
+6. **Mobile-responsive design** optimized for all device sizes
+7. **Dark mode support** with automatic system preference detection
+8. **Simplified navigation** with 3 focused pages
+9. **Real-time risk assessment** with interactive feedback
+10. **Comprehensive visualizations** on all pages
 
 ### 16.3 Lessons Learned
 

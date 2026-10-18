@@ -22,7 +22,7 @@ st.set_page_config(
     page_title="Fraud Detection System",
     page_icon="",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="auto"
 )
 
 # ============================================================
@@ -54,6 +54,93 @@ st.markdown("""
     @media (prefers-color-scheme: dark) {
         .stApp {
             background-color: #0f172a;
+        }
+    }
+
+    /* Mobile Responsive CSS */
+    @media (max-width: 768px) {
+        .card {
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .stat-card {
+            padding: 1rem;
+        }
+
+        .stat-card div[style*="font-size: 2rem"] {
+            font-size: 1.5rem !important;
+        }
+
+        .stat-card div[style*="font-size: 0.875rem"] {
+            font-size: 0.75rem !important;
+        }
+
+        h1 {
+            font-size: 1.5rem !important;
+        }
+
+        h2 {
+            font-size: 1.25rem !important;
+        }
+
+        h3 {
+            font-size: 1.1rem !important;
+        }
+
+        .risk-badge {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.75rem;
+        }
+
+        /* Stack columns on mobile */
+        .stColumns > div {
+            flex-direction: column;
+        }
+
+        /* Adjust charts for mobile */
+        .stPlotlyChart, .stMatplotlibChart {
+            width: 100% !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .card {
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .stat-card {
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+
+        .stat-card div[style*="font-size: 2rem"] {
+            font-size: 1.25rem !important;
+        }
+
+        h1 {
+            font-size: 1.25rem !important;
+        }
+
+        h2 {
+            font-size: 1.1rem !important;
+        }
+
+        h3 {
+            font-size: 1rem !important;
+        }
+
+        /* Hide sidebar on very small screens */
+        .css-1d391kg {
+            width: 0 !important;
+            display: none !important;
+        }
+
+        /* Adjust main content for no sidebar */
+        .main .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
         }
     }
 
@@ -202,10 +289,18 @@ st.markdown("""
         font-weight: 500;
         border: none;
         transition: all 0.2s;
+        width: 100%;
     }
 
     .stButton > button:hover {
         background-color: #1e40af;
+    }
+
+    @media (max-width: 768px) {
+        .stButton > button {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
     }
 
     /* Remove default Streamlit padding */
@@ -214,16 +309,51 @@ st.markdown("""
         padding-bottom: 1rem;
     }
 
+    @media (max-width: 768px) {
+        .block-container {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+    }
+
     /* Table styling */
     .dataframe {
         border-radius: 8px;
         overflow: hidden;
     }
 
+    @media (max-width: 768px) {
+        .dataframe {
+            font-size: 0.8rem;
+        }
+    }
+
     /* Sidebar and general text */
     @media (prefers-color-scheme: dark) {
         .stMarkdown, .stWrite, .stSelectbox label, .stSlider label, .stRadio label {
             color: #e2e8f0;
+        }
+    }
+
+    /* Mobile-friendly slider */
+    @media (max-width: 768px) {
+        .stSlider {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Mobile-friendly selectbox */
+    @media (max-width: 768px) {
+        .stSelectbox {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Optimize images for mobile */
+    @media (max-width: 768px) {
+        img {
+            max-width: 100%;
+            height: auto;
         }
     }
     </style>
