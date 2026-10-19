@@ -275,8 +275,11 @@ X_scaled = (X - mean) / std
 
 ## 7. Machine Learning Model
 
-### 7.1 Algorithm Selection: Random Forest
+### 7.1 Algorithm Selection
 
+The system now supports two machine learning algorithms for comparison:
+
+#### 7.1.1 Random Forest (Primary)
 **Rationale**:
 - Handles non-linear relationships well
 - Robust to overfitting through ensemble learning
@@ -284,8 +287,18 @@ X_scaled = (X - mean) / std
 - Works well with both numerical and categorical features
 - Good interpretability through tree visualization
 
+#### 7.1.2 XGBoost (Alternative)
+**Rationale**:
+- Gradient boosting framework with superior performance
+- Regularization prevents overfitting
+- Handles missing values internally
+- Fast training and prediction speed
+- Excellent for tabular data
+- State-of-the-art performance on many classification tasks
+
 ### 7.2 Model Configuration
 
+#### Random Forest Configuration
 **Hyperparameters**:
 - **n_estimators**: 100 (number of decision trees)
 - **max_depth**: 15 (maximum depth of each tree)
@@ -293,13 +306,19 @@ X_scaled = (X - mean) / std
 - **min_samples_leaf**: 1 (minimum samples in leaf)
 - **random_state**: 42 (reproducibility)
 
-**Why These Values**:
-- 100 trees provide good balance between accuracy and computational cost
-- Max depth of 15 prevents overfitting while capturing complex patterns
-- Default values for min_samples parameters work well for this dataset
+#### XGBoost Configuration
+**Hyperparameters**:
+- **n_estimators**: 100 (number of boosting rounds)
+- **max_depth**: 6 (maximum depth of each tree)
+- **learning_rate**: 0.1 (step size shrinkage)
+- **subsample**: 0.8 (fraction of samples per tree)
+- **colsample_bytree**: 0.8 (fraction of features per tree)
+- **random_state**: 42 (reproducibility)
+- **eval_metric**: 'logloss' (evaluation metric)
 
 ### 7.3 Model Architecture
 
+#### Random Forest Architecture
 ```
 Random Forest Classifier
 ├── 100 Decision Trees
@@ -312,8 +331,23 @@ Random Forest Classifier
 └── Voting Method: Majority vote with probability averaging
 ```
 
+#### XGBoost Architecture
+```
+XGBoost Classifier
+├── 100 Boosting Rounds
+│   ├── Round 1: max_depth=6, learning_rate=0.1
+│   ├── Round 2: max_depth=6, learning_rate=0.1
+│   ├── ...
+│   └── Round 100: max_depth=6, learning_rate=0.1
+├── Feature Selection: All 5 features
+├── Regularization: L1 and L2
+├── Output: Binary classification (0 or 1)
+└── Ensemble Method: Gradient boosting with weighted voting
+```
+
 ### 7.4 Training Process
 
+#### Random Forest Training
 1. Load scaled training data
 2. Initialize Random Forest with specified hyperparameters
 3. Fit model on balanced training data
@@ -322,6 +356,16 @@ Random Forest Classifier
 6. Save trained model as pickle file
 
 **Output**: `fraud_detection_model.pkl` (~4MB)
+
+#### XGBoost Training
+1. Load scaled training data
+2. Initialize XGBoost with specified hyperparameters
+3. Fit model on balanced training data
+4. Calculate feature importance
+5. Evaluate on training set (sanity check)
+6. Save trained model as pickle file
+
+**Output**: `xgboost_model.pkl` (~197KB)
 
 ---
 
@@ -361,12 +405,22 @@ Random Forest Classifier
 
 ### 8.2 Feature Importance
 
+#### Random Forest Feature Importance:
 ```
 Transaction Amount:        49.1% (Most important)
 Time of Day:               19.8%
 Merchant Category:         13.8%
 International Transaction:  9.1%
 Card Type:                  8.1%
+```
+
+#### XGBoost Feature Importance:
+```
+Transaction Amount:        30.4% (Most important)
+International Transaction: 20.0%
+Card Type:                 17.1%
+Time of Day:               16.3%
+Merchant Category:         16.3%
 ```
 
 ### 8.3 Feature Interactions
@@ -411,13 +465,54 @@ The model implicitly learns feature interactions through decision trees:
 
 ### 9.2 Training Metrics
 
+#### Random Forest Metrics
 **Training Set Performance**:
 - Accuracy: ~98%
 - Precision: ~97%
 - Recall: ~96%
 - F1 Score: ~0.965
 
-**Note**: Training metrics are typically higher than test metrics due to model familiarity with training data.
+#### XGBoost Metrics
+**Training Set Performance (7,600 samples)**:
+- Accuracy: 98.08%
+- ROC-AUC: 0.9858
+
+**Test Set Performance (1,000 samples)**:
+- Accuracy: 95.10%
+- Precision: 50.59%
+- Recall: 86.00%
+- F1 Score: 0.6370
+- ROC-AUC: 0.9858
+
+### 9.3 Model Comparison
+
+**Measured Performance on Test Data (1,000 samples)**:
+
+| Metric | Random Forest (Primary) | XGBoost (Alternative) |
+|--------|-------------------------|-----------------------|
+| Accuracy | 96.50% | 95.10% |
+| Precision | 60.56% | 50.59% |
+| Recall | 86.00% | 86.00% |
+| F1 Score | 0.7107 | 0.6370 |
+| ROC-AUC | 0.9832 | 0.9858 |
+| Training Time | ~1.5s | ~0.8s |
+| Prediction Time | <5ms | <2ms |
+| Model Size | 4.2 MB | 197 KB |
+
+**Advantages of Each Model**:
+
+**Random Forest**:
+- More interpretable (easier to explain individual trees)
+- Robust to overfitting
+- Good baseline performance
+- Less sensitive to hyperparameter tuning
+
+**XGBoost**:
+- Typically higher accuracy
+- Faster training and prediction
+- Built-in regularization
+- Handles missing values internally
+- State-of-the-art for tabular data
 
 ### 9.3 Hyperparameter Tuning
 
@@ -494,14 +589,24 @@ Actual Fraud        7      43
 - Shows trade-off between catching every fraud and keeping customer alerts manageable
 - Demonstrates robust performance on 95:5 imbalanced data
 
-### 10.4 Test Results
+### 10.4 Random Forest Test Results
 
 **On 1,000 test samples (imbalanced, realistic 95:5 ratio)**:
 - Total predictions: 1,000
-- Correct predictions: 965 (96.5%)
-- Incorrect predictions: 35 (3.5%)
-- Fraud detected: 43 out of 50 (86.0% recall)
-- False alarms: 28 out of 950 genuine transactions (2.95% false positive rate on genuine transactions; 60.6% precision among flagged alerts)
+- Correct predictions: 965 (96.50%)
+- Incorrect predictions: 35 (3.50%)
+- Fraud detected: 43 out of 50 (86.00% recall)
+- False alarms: 28 out of 950 genuine transactions (2.95% false positive rate on genuine transactions; 60.56% precision among flagged alerts)
+
+### 10.5 XGBoost Test Results
+
+**On 1,000 test samples (imbalanced, realistic 95:5 ratio)**:
+- Total predictions: 1,000
+- Correct predictions: 951 (95.10%)
+- Incorrect predictions: 49 (4.90%)
+- Fraud detected: 43 out of 50 (86.00% recall)
+- False alarms: 42 out of 950 genuine transactions (4.42% false positive rate on genuine transactions; 50.59% precision among flagged alerts)
+- ROC-AUC: 0.9858 (higher discrimination than Random Forest)
 
 ---
 
@@ -536,17 +641,21 @@ Actual Fraud        7      43
 **Purpose**: Transaction analysis interface
 
 **Components**:
+- Model selection (Random Forest, XGBoost, or Compare Both)
 - Input form (Amount, Time, Merchant, Card Type, International)
 - Real-time risk meter
 - Risk factors display
-- Prediction result card
+- Prediction result card(s)
+- Model agreement indicator (when comparing)
 - Action buttons (Approve/Flag)
 
 **Features**:
+- Model selection for comparison
 - Instant risk assessment as user inputs data
 - Clear visual feedback (color-coded risk levels)
 - Confidence score display
 - Contributing factors explanation
+- Model agreement analysis
 - Touch-friendly controls for mobile
 
 #### 11.2.3 About Page
@@ -568,19 +677,28 @@ Actual Fraud        7      43
 ### 11.3 User Interface Design
 
 **Design Principles**:
-- Clean, professional appearance
-- Card-based layout for organization
-- Color-coded risk indicators (Green/Amber/Red)
-- Dark mode support with automatic detection
+- Clean, executive appearance with high-contrast typography (Inter)
+- Minimalist card-based layout with crisp borders and soft elevation
+- Semantic color-coded risk indicators (Emerald/Amber/Rose)
+- Dark mode support with automatic system detection
 - Fully responsive design for all devices
 - Touch-friendly controls for mobile
+- Professional FinTech design language (Stripe/Ramp style)
 
 **Color Scheme**:
-- Primary: Navy blue (#1e3a8a)
-- Success: Green (#16a34a)
-- Warning: Amber (#f59e0b)
-- Danger: Red (#dc2626)
-- Background: Light gray (#f8fafc) / Dark slate (#0f172a) in dark mode
+- Primary / Canvas: Neutral Slate (#0f172a dark / #f8fafc light)
+- Surface Cards: Pure White (#ffffff light / #1e293b dark) with 1px border
+- Success: Emerald (#10b981 / #059669) for verified genuine transactions
+- Warning: Amber (#f59e0b / #d97706) for elevated suspicion
+- Danger: Rose (#e11d48 / #991b1b) for high-risk fraud alerts
+- Text: Slate (#0f172a / #f8fafc) with muted secondary labels (#64748b / #94a3b8)
+
+**Visual Design Standards**:
+- Clean KPI stat cards with category labels and status pills
+- Border-accented semantic risk cards without distracting animations
+- Seamless dark and light mode adaptation
+- High-contrast readability and accessible color contrast ratios
+- Smooth micro-transitions on interactive buttons and inputs
 
 ### 11.4 Dark Mode Implementation
 
@@ -655,11 +773,12 @@ fraud_detection_mietautonomous/
 ├── 4_handle_imbalance.py         # Apply SMOTE
 ├── 5_feature_scaling.py          # Normalize features
 ├── 6_train_model.py              # Train Random Forest
+├── 6b_train_xgboost_model.py      # Train XGBoost (NEW)
 ├── 7_evaluate_model.py           # Evaluate performance
 ├── 8_make_predictions.py         # Demonstrate predictions
-├── 9_streamlit_app.py            # Web application (3 pages)
+├── 9_streamlit_app.py            # Web application (3 pages + model selection)
 ├── 10_fastapi_app.py             # Optional FastAPI backend
-├── requirements.txt              # Python dependencies
+├── requirements.txt              # Python dependencies (updated with xgboost)
 ├── HOW_TO_RUN.md                 # Setup instructions
 ├── VERIFICATION_GUIDE.md          # Testing guide
 ├── DPR.md                        # Detailed Project Report
@@ -672,10 +791,12 @@ fraud_detection_mietautonomous/
 ├── y_test.csv                    # Test labels
 ├── X_train_scaled.csv            # Scaled training features
 ├── X_test_scaled.csv             # Scaled test features
-├── fraud_detection_model.pkl     # Trained model
+├── fraud_detection_model.pkl     # Trained Random Forest model
+├── xgboost_model.pkl             # Trained XGBoost model (NEW)
 ├── scaler.pkl                    # Feature scaler
 ├── eda_visualization.png         # EDA plots
-└── model_evaluation.png          # Performance visualizations
+├── model_evaluation.png          # Performance visualizations
+└── xgboost_feature_importance.png # XGBoost feature importance (NEW)
 ```
 
 ### 12.2 Key Code Snippets
@@ -854,8 +975,9 @@ fraud_prob = probability[1]
 
 2. **Model Optimization**
    - Hyperparameter tuning with grid search
-   - Try other algorithms (XGBoost, LightGBM)
+   - Try other algorithms (LightGBM, CatBoost)
    - Implement ensemble methods
+   - Compare XGBoost vs Random Forest performance
 
 3. **Feature Expansion**
    - Add geographic location data
@@ -925,15 +1047,18 @@ This project successfully developed a comprehensive credit card fraud detection 
 ### 16.2 Technical Achievements
 
 1. **Effective class imbalance handling** using SMOTE
-2. **Robust model** with Random Forest ensemble
+2. **Robust models** with Random Forest and XGBoost ensembles
 3. **Clean, maintainable code** with modular structure
-4. **Professional UI** with modern design principles
+4. **Professional UI** with modern design principles and animations
 5. **Complete documentation** including DPR, verification guide, and setup instructions
 6. **Mobile-responsive design** optimized for all device sizes
 7. **Dark mode support** with automatic system preference detection
 8. **Simplified navigation** with 3 focused pages
 9. **Real-time risk assessment** with interactive feedback
 10. **Comprehensive visualizations** on all pages
+11. **Model comparison feature** allowing selection between Random Forest and XGBoost
+12. **Executive UI styling** with clean FinTech aesthetics, crisp typography, and high-contrast indicators
+13. **Model agreement analysis** for confidence in predictions
 
 ### 16.3 Lessons Learned
 

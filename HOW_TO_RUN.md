@@ -13,15 +13,23 @@ Make sure you have:
 
 ---
 
-## 🔧 STEP 0: Install Dependencies
+## 🔧 STEP 0: Set Up Environment & Install Dependencies
 
-Run this FIRST to install all required libraries:
+Run this FIRST to create a virtual environment and install all required libraries:
 
 ```bash
+# 1. Create virtual environment
+python3 -m venv venv
+
+# 2. Activate virtual environment
+source venv/bin/activate  # On macOS/Linux
+# venv\Scripts\activate   # On Windows
+
+# 3. Install dependencies
 pip install -r requirements.txt
 ```
 
-Wait for installation to complete (2-3 minutes).
+Wait for installation to complete (1-2 minutes).
 
 ---
 
@@ -149,6 +157,27 @@ python 6_train_model.py
 
 ---
 
+### **STEP 6b: Train XGBoost Model (Alternative)**
+```bash
+python 6b_train_xgboost_model.py
+```
+
+**What happens:**
+- Trains XGBoost Classifier (100 boosting rounds)
+- Saves trained model and feature importance chart
+- Generates `xgboost_model.pkl` and `xgboost_feature_importance.png`
+
+**Output:**
+```
+✅ XGBoost model saved as 'xgboost_model.pkl'
+✅ Feature importance saved as 'xgboost_feature_importance.png'
+📊 Training accuracy: 98.08%
+📊 Test accuracy: 95.10%
+📊 ROC-AUC: 0.9858
+```
+
+---
+
 ### **STEP 7: Evaluate Model**
 ```bash
 python 7_evaluate_model.py
@@ -225,24 +254,27 @@ project_folder/
 ├── 4_handle_imbalance.py
 ├── 5_feature_scaling.py
 ├── 6_train_model.py
+├── 6b_train_xgboost_model.py
 ├── 7_evaluate_model.py
 ├── 8_make_predictions.py
 ├── 9_streamlit_app.py
 ├── requirements.txt
 │
 └── Generated Files:
-    ├── data.csv                    (from Step 1)
-    ├── data_cleaned.csv            (from Step 2)
-    ├── eda_visualization.png       (from Step 3)
-    ├── X_train_balanced.csv        (from Step 4)
-    ├── y_train_balanced.csv        (from Step 4)
-    ├── X_test.csv                  (from Step 4)
-    ├── y_test.csv                  (from Step 4)
-    ├── X_train_scaled.csv          (from Step 5)
-    ├── X_test_scaled.csv           (from Step 5)
-    ├── scaler.pkl                  (from Step 5)
-    ├── fraud_detection_model.pkl   (from Step 6)
-    └── model_evaluation.png        (from Step 7)
+    ├── data.csv                       (from Step 1)
+    ├── data_cleaned.csv               (from Step 2)
+    ├── eda_visualization.png          (from Step 3)
+    ├── X_train_balanced.csv           (from Step 4)
+    ├── y_train_balanced.csv           (from Step 4)
+    ├── X_test.csv                     (from Step 4)
+    ├── y_test.csv                     (from Step 4)
+    ├── X_train_scaled.csv             (from Step 5)
+    ├── X_test_scaled.csv              (from Step 5)
+    ├── scaler.pkl                     (from Step 5)
+    ├── fraud_detection_model.pkl      (from Step 6)
+    ├── xgboost_model.pkl              (from Step 6b)
+    ├── xgboost_feature_importance.png (from Step 6b)
+    └── model_evaluation.png           (from Step 7)
 ```
 
 ---
