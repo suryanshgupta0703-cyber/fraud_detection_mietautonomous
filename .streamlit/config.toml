@@ -1,8 +1,7 @@
 [theme]
-primaryColor = "#0f172a"
-backgroundColor = "#f8fafc"
-secondaryBackgroundColor = "#ffffff"
-textColor = "#0f172a"
+# Let Streamlit's own light/dark toggle work cleanly.
+# primaryColor drives button + accent colors in both themes.
+primaryColor = "#6366f1"
 font = "sans serif"
 
 [server]

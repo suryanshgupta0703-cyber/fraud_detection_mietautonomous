@@ -51,88 +51,76 @@ def load_models_and_scaler():
 
 st.markdown("""
     <style>
-    /* Clean, Professional FinTech Dashboard Styling */
+    /* =====================================================
+       FRAUD DETECTION SYSTEM — ADAPTIVE THEME STYLESHEET
+       Works correctly in BOTH Streamlit Light & Dark mode
+       Uses Streamlit CSS variables for theme inheritance
+    ===================================================== */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
     html, body, [class*="css"] {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* Base App Canvas - Clean neutral backgrounds, zero distracting animations */
-    .stApp {
-        background-color: #f8fafc;
+    /* Page container */
+    .block-container {
+        padding-top: 1.75rem;
+        padding-bottom: 2.5rem;
+        max-width: 1140px;
     }
 
-    @media (prefers-color-scheme: dark) {
-        .stApp {
-            background-color: #0b0f19;
-        }
-    }
-
-    /* Content Cards */
+    /* ── Cards ───────────────────────────────────────────
+       Use Streamlit's secondary background so cards stand
+       out from the page in BOTH dark and light themes.
+    ────────────────────────────────────────────────────── */
     .card {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
+        background-color: var(--secondary-background-color);
+        border: 1px solid rgba(128, 128, 128, 0.2);
         border-radius: 12px;
         padding: 1.5rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
         margin-bottom: 1.25rem;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .card:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+        border-color: rgba(128, 128, 128, 0.35);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
     }
 
     .card-text {
-        color: #64748b;
-        line-height: 1.5;
+        color: var(--text-color);
+        opacity: 0.65;
+        line-height: 1.6;
     }
 
-    @media (prefers-color-scheme: dark) {
-        .card {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-            color: #f1f5f9;
-            box-shadow: none;
-        }
-        .card:hover {
-            border-color: #475569;
-        }
-        .card-text {
-            color: #94a3b8;
-        }
-    }
-
-    /* Stat Cards - Clean KPI presentation */
+    /* ── Stat Cards ───────────────────────────────────── */
     .stat-card {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
+        background-color: var(--secondary-background-color);
+        border: 1px solid rgba(128, 128, 128, 0.2);
         border-radius: 12px;
         padding: 1.25rem 1.5rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .stat-card:hover {
-        border-color: #cbd5e1;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06);
+        border-color: rgba(128, 128, 128, 0.35);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
     }
 
     .stat-label {
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         font-weight: 600;
-        color: #64748b;
+        color: var(--text-color);
+        opacity: 0.55;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.35rem;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.4rem;
     }
 
     .stat-value {
         font-size: 1.85rem;
         font-weight: 700;
-        color: #0f172a;
+        color: var(--text-color);
         letter-spacing: -0.02em;
         line-height: 1.2;
     }
@@ -140,252 +128,127 @@ st.markdown("""
     .stat-pill {
         display: inline-flex;
         align-items: center;
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         font-weight: 500;
-        padding: 0.15rem 0.5rem;
+        padding: 0.15rem 0.55rem;
         border-radius: 9999px;
         margin-top: 0.5rem;
     }
 
+    /* Semantic pill variants — use transparent tints that
+       read well on both light and dark secondary surfaces */
     .stat-pill.success {
-        background: #ecfdf5;
-        color: #059669;
-        border: 1px solid #a7f3d0;
+        background: rgba(16, 185, 129, 0.12);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.35);
     }
 
     .stat-pill.neutral {
-        background: #f1f5f9;
-        color: #475569;
-        border: 1px solid #e2e8f0;
+        background: rgba(100, 116, 139, 0.1);
+        color: var(--text-color);
+        opacity: 0.8;
+        border: 1px solid rgba(100, 116, 139, 0.25);
     }
 
     .stat-pill.warning {
-        background: #fffbeb;
-        color: #d97706;
-        border: 1px solid #fde68a;
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.35);
     }
 
-    @media (prefers-color-scheme: dark) {
-        .stat-card {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-            box-shadow: none;
-        }
-        .stat-card:hover {
-            border-color: #475569;
-        }
-        .stat-label {
-            color: #94a3b8;
-        }
-        .stat-value {
-            color: #f8fafc;
-        }
-        .stat-pill.success {
-            background: rgba(16, 185, 129, 0.15);
-            color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-        .stat-pill.neutral {
-            background: rgba(148, 163, 184, 0.15);
-            color: #cbd5e1;
-            border: 1px solid rgba(148, 163, 184, 0.3);
-        }
-        .stat-pill.warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
-    }
-
-    /* Result Cards - Clear, Professional Semantic Banners */
+    /* ── Risk Result Banners ────────────────────────────
+       Left-border accent style — tint works in both modes
+    ────────────────────────────────────────────────────── */
     .fraud-high {
-        background-color: #fff1f2;
-        border: 1px solid #fecdd3;
+        background-color: rgba(225, 29, 72, 0.08);
+        border: 1px solid rgba(225, 29, 72, 0.25);
         border-left: 4px solid #e11d48;
         border-radius: 12px;
         padding: 1.5rem;
-        color: #1e293b;
+        color: var(--text-color);
     }
 
     .fraud-medium {
-        background-color: #fffbeb;
-        border: 1px solid #fde68a;
-        border-left: 4px solid #d97706;
+        background-color: rgba(245, 158, 11, 0.08);
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        border-left: 4px solid #f59e0b;
         border-radius: 12px;
         padding: 1.5rem;
-        color: #1e293b;
+        color: var(--text-color);
     }
 
     .fraud-low {
-        background-color: #f0fdf4;
-        border: 1px solid #bbf7d0;
-        border-left: 4px solid #16a34a;
+        background-color: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.25);
+        border-left: 4px solid #10b981;
         border-radius: 12px;
         padding: 1.5rem;
-        color: #1e293b;
+        color: var(--text-color);
     }
 
-    @media (prefers-color-scheme: dark) {
-        .fraud-high {
-            background-color: rgba(225, 29, 72, 0.1);
-            border: 1px solid rgba(225, 29, 72, 0.3);
-            border-left: 4px solid #e11d48;
-            color: #f8fafc;
-        }
-        .fraud-medium {
-            background-color: rgba(217, 119, 6, 0.1);
-            border: 1px solid rgba(217, 119, 6, 0.3);
-            border-left: 4px solid #d97706;
-            color: #f8fafc;
-        }
-        .fraud-low {
-            background-color: rgba(22, 163, 74, 0.1);
-            border: 1px solid rgba(22, 163, 74, 0.3);
-            border-left: 4px solid #16a34a;
-            color: #f8fafc;
-        }
-    }
-
-    /* Confidence Box */
+    /* ── Confidence Box ─────────────────────────────── */
     .confidence-box {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
+        background-color: rgba(128, 128, 128, 0.07);
+        border: 1px solid rgba(128, 128, 128, 0.18);
         padding: 1rem 1.25rem;
         border-radius: 8px;
         margin-bottom: 1rem;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
     }
 
     .confidence-score {
-        color: #0f172a;
+        color: var(--text-color);
         font-weight: 700;
     }
 
-    @media (prefers-color-scheme: dark) {
-        .confidence-box {
-            background-color: #0f172a !important;
-            border: 1px solid #334155;
-            box-shadow: none;
-        }
-        .confidence-score {
-            color: #f8fafc !important;
-        }
-    }
-
-    /* Badges */
+    /* ── Risk Badges (pills on result cards) ────────── */
     .risk-badge {
         display: inline-flex;
         align-items: center;
-        padding: 0.35rem 0.85rem;
+        padding: 0.3rem 0.8rem;
         border-radius: 9999px;
         font-weight: 600;
-        font-size: 0.8rem;
-        letter-spacing: 0.02em;
+        font-size: 0.78rem;
+        letter-spacing: 0.03em;
     }
 
     .risk-high {
-        background-color: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fca5a5;
+        background: rgba(225, 29, 72, 0.15);
+        color: #e11d48;
+        border: 1px solid rgba(225, 29, 72, 0.35);
     }
 
     .risk-medium {
-        background-color: #fef3c7;
-        color: #92400e;
-        border: 1px solid #fcd34d;
+        background: rgba(245, 158, 11, 0.15);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.35);
     }
 
     .risk-low {
-        background-color: #dcfce7;
-        color: #166534;
-        border: 1px solid #86efac;
+        background: rgba(16, 185, 129, 0.15);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.35);
     }
 
-    @media (prefers-color-scheme: dark) {
-        .risk-high {
-            background-color: rgba(225, 29, 72, 0.2);
-            color: #fda4af;
-            border-color: rgba(225, 29, 72, 0.4);
-        }
-        .risk-medium {
-            background-color: rgba(245, 158, 11, 0.2);
-            color: #fde68a;
-            border-color: rgba(245, 158, 11, 0.4);
-        }
-        .risk-low {
-            background-color: rgba(22, 163, 74, 0.2);
-            color: #a7f3d0;
-            border-color: rgba(22, 163, 74, 0.4);
-        }
-    }
-
-    /* Typography */
-    h1 {
-        color: #0f172a;
-        font-weight: 700;
-        letter-spacing: -0.025em;
-        margin-bottom: 0.25rem;
-    }
-
-    h2, h3 {
-        color: #1e293b;
-        font-weight: 600;
-        letter-spacing: -0.015em;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        h1 {
-            color: #f8fafc;
-        }
-        h2, h3 {
-            color: #f1f5f9;
-        }
-    }
-
-    /* Clean Buttons */
+    /* ── Buttons ────────────────────────────────────── */
     .stButton > button {
-        background-color: #0f172a;
-        color: #ffffff;
         border-radius: 8px;
-        padding: 0.65rem 1.25rem;
+        padding: 0.6rem 1.25rem;
         font-weight: 600;
         font-size: 0.9rem;
-        border: 1px solid #0f172a;
-        transition: all 0.15s ease;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: opacity 0.15s ease, box-shadow 0.15s ease;
         width: 100%;
     }
 
     .stButton > button:hover {
-        background-color: #1e293b;
-        border-color: #1e293b;
-        color: #ffffff;
+        opacity: 0.88;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
     }
 
     .stButton > button:active {
         transform: translateY(1px);
     }
 
-    @media (prefers-color-scheme: dark) {
-        .stButton > button {
-            background-color: #3b82f6;
-            border-color: #3b82f6;
-            color: #ffffff;
-        }
-        .stButton > button:hover {
-            background-color: #2563eb;
-            border-color: #2563eb;
-        }
-    }
-
-    /* Page container spacing */
-    .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 2rem;
-        max-width: 1120px;
-    }
-
-    /* Mobile Responsive adjustments */
+    /* ── Mobile ─────────────────────────────────────── */
     @media (max-width: 768px) {
         .card, .stat-card {
             padding: 1rem;
